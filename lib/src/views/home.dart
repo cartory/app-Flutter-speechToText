@@ -1,11 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'package:appstt/src/models/language_model.dart';
 import 'package:appstt/src/providers/speech_provider.dart';
-import 'package:appstt/src/views/pages/dashboard.dart';
-import 'package:appstt/src/views/pages/settings.dart';
-import 'package:appstt/src/views/pages/language.dart';
-import 'package:appstt/src/views/pages/profile.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -16,7 +12,7 @@ class _HomeState extends State<Home> {
   //
   SpeechProvider speechProvider = SpeechProvider();
   // SpeechProvider speechProvider = SpeechProvider();
-  Widget currentPage = RadioWidgetDemo();
+  Widget currentPage = Container();
   //
   @override
   void initState() {
@@ -27,6 +23,16 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Speech to Text App'),
+        centerTitle: true,
+        actions: <Widget>[
+          PopupMenuButton<Language>(
+            onSelected: _selectLang,
+            itemBuilder: (context) => _buildLanguagesWidgets,
+          ),
+        ],
+      ),
       body: currentPage,
       floatingActionButton: FloatingActionButton(
           backgroundColor: Colors.cyan,
@@ -40,6 +46,17 @@ class _HomeState extends State<Home> {
     );
   }
 
+  _selectLang(Language lang) => setState(() => speechProvider.lang = lang);
+
+  List<CheckedPopupMenuItem<Language>> get _buildLanguagesWidgets =>
+      Language.languages
+          .map((l) => new CheckedPopupMenuItem<Language>(
+                value: l,
+                checked: speechProvider.language == l,
+                child: new Text(l.name),
+              ))
+          .toList();
+
   Widget _bottomAppBar() {
     return BottomAppBar(
       color: Colors.deepPurpleAccent,
@@ -51,15 +68,24 @@ class _HomeState extends State<Home> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             _row(
-                _materialButton('Home', Icons.home,
-                    () => setState(() => currentPage = Dashboard())),
-                _materialButton('Chat', Icons.chat,
-                    () => setState(() => currentPage = Profile()))),
+                _materialButton('Inicio', Icons.home,
+                    () => setState(() => currentPage = Container())),
+                _materialButton(
+                    'Ayuda',
+                    Icons.help,
+                    () => setState(() =>
+                        currentPage = Container(color: Colors.yellowAccent)))),
             _row(
-              _materialButton('Idioma', Icons.language,
-                  () => setState(() => currentPage = RadioWidgetDemo())),
-              _materialButton('Ajustes', Icons.settings,
-                  () => setState(() => currentPage = Settings())),
+              _materialButton(
+                  'Perfil',
+                  Icons.account_circle,
+                  () => setState(() =>
+                      currentPage = Container(color: Colors.greenAccent))),
+              _materialButton(
+                  'Ajustes',
+                  Icons.settings,
+                  () => setState(
+                      () => currentPage = Container(color: Colors.cyanAccent))),
             ),
           ],
         ),
@@ -75,7 +101,8 @@ class _HomeState extends State<Home> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text(speechProvider.isListening.toString()),
+            title: Center(
+                child: Text('Escuchando en ${speechProvider.language.name}')),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(20.0))),
             content: Container(
@@ -85,8 +112,8 @@ class _HomeState extends State<Home> {
                   stream: speechProvider.wordStream,
                   builder: (_, AsyncSnapshot<String> snapshot) {
                     return snapshot.hasData
-                        ? Text(speechProvider.lastWords)
-                        : Text('Test Speech to Text');
+                        ? Center(child: Text(speechProvider.lastWords))
+                        : Center(child: Text('Esperando Voz'));
                   },
                 )),
             actions: <Widget>[
@@ -94,6 +121,7 @@ class _HomeState extends State<Home> {
                 child: new Text('CANCEL'),
                 onPressed: () {
                   if (!speechProvider.isListening) {
+                    speechProvider.cancelSpeech();
                     Navigator.of(context).pop();
                   }
                 },

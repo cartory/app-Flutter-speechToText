@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:appstt/src/models/language_model.dart';
 import 'package:speech_recognition/speech_recognition.dart';
 
 class SpeechProvider {
@@ -8,7 +9,7 @@ class SpeechProvider {
   bool _isListening = false;
 
   String _resultText = "";
-  String _locale = "en_US";
+  Language _locale = Language.languages.first;
 
   final _availableController = StreamController<bool>.broadcast();
   final _listeningController = StreamController<bool>.broadcast();
@@ -25,6 +26,9 @@ class SpeechProvider {
   String get lastWords => _resultText;
   bool get isAvailable => _isAvailable;
   bool get isListening => _isListening;
+  Language get language => _locale;
+  
+  set lang(Language language)=> _locale = language; 
 
   void initSpeechRecognizer() {
     _speechRecognition.setAvailabilityHandler(
@@ -47,7 +51,7 @@ class SpeechProvider {
   Future<void> speechToText() async {
     if (_isAvailable && !_isListening)
       _speechRecognition
-          .listen(locale: _locale)
+          .listen(locale: _locale.code)
           .then((result) => print('$result'));
   }
 
