@@ -1,7 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:appstt/src/providers/speech_provider.dart';
-
 import 'package:appstt/src/views/pages/dashboard.dart';
 import 'package:appstt/src/views/pages/settings.dart';
 import 'package:appstt/src/views/pages/language.dart';
@@ -15,12 +15,13 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   //
   SpeechProvider speechProvider = SpeechProvider();
+  // SpeechProvider speechProvider = SpeechProvider();
   Widget currentPage = RadioWidgetDemo();
   //
   @override
   void initState() {
     super.initState();
-    speechProvider.initSpeechState(mounted);
+    speechProvider.initSpeechRecognizer();
   }
 
   @override
@@ -49,27 +50,16 @@ class _HomeState extends State<Home> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                _materialButton('Home', Icons.home, onPressed: () {
-                  setState(() => currentPage = Dashboard());
-                }),
-                _materialButton('Chat', Icons.chat, onPressed: () {
-                  setState(() => currentPage = Profile());
-                })
-              ],
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                _materialButton('Idioma', Icons.language, onPressed: () {
-                  setState(() => currentPage = RadioWidgetDemo());
-                }),
-                _materialButton('Ajustes', Icons.settings, onPressed: () {
-                  setState(() => currentPage = Settings());
-                }),
-              ],
+            _row(
+                _materialButton('Home', Icons.home,
+                    () => setState(() => currentPage = Dashboard())),
+                _materialButton('Chat', Icons.chat,
+                    () => setState(() => currentPage = Profile()))),
+            _row(
+              _materialButton('Idioma', Icons.language,
+                  () => setState(() => currentPage = RadioWidgetDemo())),
+              _materialButton('Ajustes', Icons.settings,
+                  () => setState(() => currentPage = Settings())),
             ),
           ],
         ),
@@ -77,30 +67,43 @@ class _HomeState extends State<Home> {
     );
   }
 
+  Row _row(Widget a, Widget b) => Row(children: <Widget>[a, b]);
+
   _displayDialog(BuildContext context) async {
     return showDialog(
+        barrierDismissible: false,
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('ListView in Dialog'),
+            title: Text(speechProvider.isListening.toString()),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(20.0))),
             content: Container(
-              width: double.maxFinite,
-              height: 300.0,
-              child: StreamBuilder(
-                stream: speechProvider.wordStream,
-                builder: (_, snapshot){
-                  return snapshot.hasData
-                    ? Text(speechProvider.lastWords)
-                    : Text('Test Speech to Text');
+                width: double.maxFinite,
+                height: 300.0,
+                child: StreamBuilder(
+                  stream: speechProvider.wordStream,
+                  builder: (_, AsyncSnapshot<String> snapshot) {
+                    return snapshot.hasData
+                        ? Text(speechProvider.lastWords)
+                        : Text('Test Speech to Text');
+                  },
+                )),
+            actions: <Widget>[
+              FlatButton(
+                child: new Text('CANCEL'),
+                onPressed: () {
+                  if (!speechProvider.isListening) {
+                    Navigator.of(context).pop();
+                  }
                 },
               )
-            ),
+            ],
           );
         });
   }
 
-  Widget _materialButton(String textButton, IconData icon,
-      {Function onPressed}) {
+  Widget _materialButton(String textButton, IconData icon, Function onPressed) {
     return MaterialButton(
         minWidth: 69,
         child: Column(
