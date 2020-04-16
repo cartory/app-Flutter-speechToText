@@ -1,8 +1,4 @@
 import 'package:appstt/src/providers/speech_provider.dart';
-import 'package:appstt/src/views/pages/dashboard.dart';
-import 'package:appstt/src/views/pages/language.dart';
-import 'package:appstt/src/views/pages/profile.dart';
-import 'package:appstt/src/views/pages/settings.dart';
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {
@@ -13,11 +9,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   // 
   SpeechProvider speechProvider = SpeechProvider();
-  
-  static int currentTab = 0;
-  Widget currentScreen = Dashboard();
-
-  // 
+  //  
   @override
   void initState() {
     super.initState();
@@ -27,9 +19,15 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageStorage(
-        bucket: PageStorageBucket(), 
-        child: currentScreen
+      body: Center(
+        child: StreamBuilder(
+          stream: speechProvider.wordStream,
+          builder: (_, snapshot) {
+            return snapshot.hasData
+              ? Text(speechProvider.lastWords)
+              : Text('Test Speech to Text');
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
           child: Icon(Icons.mic),
