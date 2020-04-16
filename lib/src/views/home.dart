@@ -9,11 +9,10 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  //
   SpeechProvider speechProvider = SpeechProvider();
-  // SpeechProvider speechProvider = SpeechProvider();
   Widget currentPage = Container();
-  //
+  int currentIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -35,7 +34,7 @@ class _HomeState extends State<Home> {
       ),
       body: currentPage,
       floatingActionButton: FloatingActionButton(
-          backgroundColor: Colors.cyan,
+          backgroundColor: Colors.deepPurpleAccent,
           child: Icon(Icons.mic),
           onPressed: () {
             speechProvider.speechToText();
@@ -50,16 +49,16 @@ class _HomeState extends State<Home> {
 
   List<CheckedPopupMenuItem<Language>> get _buildLanguagesWidgets =>
       Language.languages
-          .map((l) => new CheckedPopupMenuItem<Language>(
+          .map((l) => CheckedPopupMenuItem<Language>(
                 value: l,
                 checked: speechProvider.language == l,
-                child: new Text(l.name),
+                child: Text(l.name),
               ))
           .toList();
 
   Widget _bottomAppBar() {
     return BottomAppBar(
-      color: Colors.deepPurpleAccent,
+      color: Colors.white70,
       shape: CircularNotchedRectangle(),
       notchMargin: 3,
       child: Container(
@@ -68,24 +67,39 @@ class _HomeState extends State<Home> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             _row(
-                _materialButton('Inicio', Icons.home,
-                    () => setState(() => currentPage = Container())),
+                _materialButton(
+                    'Inicio',
+                    Icons.home,
+                    currentIndex == 0,
+                    () => setState(() {
+                          currentIndex = 0;
+                          currentPage = Container();
+                        })),
                 _materialButton(
                     'Ayuda',
                     Icons.help,
-                    () => setState(() =>
-                        currentPage = Container(color: Colors.yellowAccent)))),
+                    currentIndex == 1,
+                    () => setState(() {
+                          currentIndex = 1;
+                          currentPage = Container(color: Colors.yellowAccent);
+                        }))),
             _row(
               _materialButton(
                   'Perfil',
                   Icons.account_circle,
-                  () => setState(() =>
-                      currentPage = Container(color: Colors.greenAccent))),
+                  currentIndex == 2,
+                  () => setState(() {
+                        currentIndex = 2;
+                        currentPage = Container(color: Colors.greenAccent);
+                      })),
               _materialButton(
                   'Ajustes',
                   Icons.settings,
-                  () => setState(
-                      () => currentPage = Container(color: Colors.cyanAccent))),
+                  currentIndex == 3,
+                  () => setState(() {
+                        currentIndex = 3;
+                        currentPage = Container(color: Colors.cyanAccent);
+                      })),
             ),
           ],
         ),
@@ -107,18 +121,18 @@ class _HomeState extends State<Home> {
                 borderRadius: BorderRadius.all(Radius.circular(20.0))),
             content: Container(
                 width: double.maxFinite,
-                height: 300.0,
+                height: 250,
                 child: StreamBuilder(
                   stream: speechProvider.wordStream,
-                  builder: (_, AsyncSnapshot<String> snapshot) {
+                  builder: (_, snapshot) {
                     return snapshot.hasData
                         ? Center(child: Text(speechProvider.lastWords))
-                        : Center(child: Text('Esperando Voz'));
+                        : Center(child: Text('Esperando Voz...'));
                   },
                 )),
             actions: <Widget>[
               FlatButton(
-                child: new Text('CANCEL'),
+                child: Text('CANCEL'),
                 onPressed: () {
                   if (!speechProvider.isListening) {
                     speechProvider.cancelSpeech();
@@ -131,7 +145,9 @@ class _HomeState extends State<Home> {
         });
   }
 
-  Widget _materialButton(String textButton, IconData icon, Function onPressed) {
+  Widget _materialButton(String textButton, IconData icon, bool selected, Function onPressed) {
+    
+    final color = selected ? Colors.deepPurpleAccent : Colors.black45;
     return MaterialButton(
         minWidth: 69,
         child: Column(
@@ -139,11 +155,12 @@ class _HomeState extends State<Home> {
           children: <Widget>[
             Icon(
               icon,
-              color: Colors.white,
+              color: color
             ),
             Text(
               textButton,
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(
+                  color: color),
             )
           ],
         ),

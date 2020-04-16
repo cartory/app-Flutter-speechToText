@@ -11,41 +11,30 @@ class SpeechProvider {
   String _resultText = "";
   Language _locale = Language.languages.first;
 
-  final _availableController = StreamController<bool>.broadcast();
-  final _listeningController = StreamController<bool>.broadcast();
   final _lastWordsController = StreamController<String>.broadcast();
 
   Stream<String> get wordStream => _lastWordsController.stream;
-  Stream<bool> get avaibleStream => _availableController.stream;
-  Stream<bool> get listenStream => _listeningController.stream;
-
-  Function(String) get wordChange => _lastWordsController.sink.add;
-  Function(bool) get availableChange => _availableController.sink.add;
-  Function(bool) get listeningChange => _availableController.sink.add;
 
   String get lastWords => _resultText;
   bool get isAvailable => _isAvailable;
   bool get isListening => _isListening;
   Language get language => _locale;
-  
-  set lang(Language language)=> _locale = language; 
+
+  set lang(Language language) => _locale = language;
 
   void initSpeechRecognizer() {
-    _speechRecognition.setAvailabilityHandler(
-        (bool result) => availableChange(_isAvailable = result));
+    _speechRecognition
+        .setAvailabilityHandler((bool result) => _isAvailable = result);
 
-    _speechRecognition.setRecognitionStartedHandler(
-        () => listeningChange(_isListening = true));
+    _speechRecognition.setRecognitionStartedHandler(() => _isListening = true);
 
     _speechRecognition.setRecognitionResultHandler(
-        (String speech) => wordChange(_resultText = speech));
-
-    _speechRecognition.setRecognitionCompleteHandler(
-        () => listeningChange(_isListening = false));
+        (String speech) => _lastWordsController.sink.add(_resultText = speech));
 
     _speechRecognition
-        .activate()
-        .then((result) => availableChange(_isAvailable = result));
+        .setRecognitionCompleteHandler(() => _isListening = false);
+
+    _speechRecognition.activate().then((result) => _isAvailable = result);
   }
 
   Future<void> speechToText() async {
@@ -57,22 +46,18 @@ class SpeechProvider {
 
   Future<void> stopSpeech() async {
     if (_isListening)
-      _speechRecognition
-          .stop()
-          .then((result) => listeningChange(_isListening = result));
+      _speechRecognition.stop().then((result) => _isListening = result);
   }
 
   Future<void> cancelSpeech() async {
     if (_isListening)
       _speechRecognition.cancel().then((result) {
-        listeningChange(_isListening = result);
-        wordChange(_resultText = "");
+        _isListening = result;
+        _lastWordsController.sink.add(_resultText = "");
       });
   }
 
   dispose() {
-    _availableController?.close();
-    _listeningController?.close();
     _lastWordsController?.close();
   }
 }
