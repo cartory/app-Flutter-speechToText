@@ -1,5 +1,11 @@
-import 'package:appstt/src/providers/speech_provider.dart';
 import 'package:flutter/material.dart';
+
+import 'package:appstt/src/providers/speech_provider.dart';
+
+import 'package:appstt/src/views/pages/dashboard.dart';
+import 'package:appstt/src/views/pages/settings.dart';
+import 'package:appstt/src/views/pages/language.dart';
+import 'package:appstt/src/views/pages/profile.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -7,9 +13,10 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  // 
+  //
   SpeechProvider speechProvider = SpeechProvider();
-  //  
+  Widget currentPage = RadioWidgetDemo();
+  //
   @override
   void initState() {
     super.initState();
@@ -19,19 +26,14 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: StreamBuilder(
-          stream: speechProvider.wordStream,
-          builder: (_, snapshot) {
-            return snapshot.hasData
-              ? Text(speechProvider.lastWords)
-              : Text('Test Speech to Text');
-          },
-        ),
-      ),
+      body: currentPage,
       floatingActionButton: FloatingActionButton(
+          backgroundColor: Colors.cyan,
           child: Icon(Icons.mic),
-          onPressed: () => speechProvider.speechToText()),
+          onPressed: () {
+            speechProvider.speechToText();
+            _displayDialog(context);
+          }),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: _bottomAppBar(),
     );
@@ -39,6 +41,7 @@ class _HomeState extends State<Home> {
 
   Widget _bottomAppBar() {
     return BottomAppBar(
+      color: Colors.deepPurpleAccent,
       shape: CircularNotchedRectangle(),
       notchMargin: 3,
       child: Container(
@@ -49,15 +52,23 @@ class _HomeState extends State<Home> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                _materialButton('Home', Icons.dashboard),
-                _materialButton('Chat', Icons.chat)
+                _materialButton('Home', Icons.home, onPressed: () {
+                  setState(() => currentPage = Dashboard());
+                }),
+                _materialButton('Chat', Icons.chat, onPressed: () {
+                  setState(() => currentPage = Profile());
+                })
               ],
             ),
             Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                _materialButton('Perfil', Icons.account_box),
-                _materialButton('Ajustes', Icons.settings),
+                _materialButton('Idioma', Icons.language, onPressed: () {
+                  setState(() => currentPage = RadioWidgetDemo());
+                }),
+                _materialButton('Ajustes', Icons.settings, onPressed: () {
+                  setState(() => currentPage = Settings());
+                }),
               ],
             ),
           ],
@@ -66,7 +77,30 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _materialButton(String textButton, IconData icon) {
+  _displayDialog(BuildContext context) async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('ListView in Dialog'),
+            content: Container(
+              width: double.maxFinite,
+              height: 300.0,
+              child: StreamBuilder(
+                stream: speechProvider.wordStream,
+                builder: (_, snapshot){
+                  return snapshot.hasData
+                    ? Text(speechProvider.lastWords)
+                    : Text('Test Speech to Text');
+                },
+              )
+            ),
+          );
+        });
+  }
+
+  Widget _materialButton(String textButton, IconData icon,
+      {Function onPressed}) {
     return MaterialButton(
         minWidth: 69,
         child: Column(
@@ -74,15 +108,15 @@ class _HomeState extends State<Home> {
           children: <Widget>[
             Icon(
               icon,
-              color: Colors.blue,
+              color: Colors.white,
             ),
             Text(
               textButton,
-              style: TextStyle(color: Colors.blue),
+              style: TextStyle(color: Colors.white),
             )
           ],
         ),
-        onPressed: () {});
+        onPressed: onPressed);
   }
 
   @override
@@ -90,7 +124,4 @@ class _HomeState extends State<Home> {
     speechProvider.dispose();
     super.dispose();
   }
-}
-
-class Chat {
 }

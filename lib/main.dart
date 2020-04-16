@@ -10,6 +10,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Speech To Text',
       home: Home(),
+      theme: ThemeData(  
+        primaryColor: Colors.deepPurpleAccent
+      ),
     );
   }
 }
