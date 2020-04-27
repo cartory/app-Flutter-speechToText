@@ -24,7 +24,7 @@ class NaturalLanguageProvider {
   }
 
   analizeText(String text) {
-    if (text == null) return;
+    // if (text == null) return;
     print(text);
     var req = AnalyzeEntitiesRequest.fromJson({
       "document": {

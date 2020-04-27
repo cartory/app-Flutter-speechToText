@@ -49,20 +49,24 @@ class _HomeState extends State<Home> {
   }
 
   Widget displayJson(Map<String, Object> json) {
-    return Container(
-      padding: EdgeInsets.all(10),
-      child: Card(
-        child: Container(
-          child: JsonViewerWidget(json),
-          padding: EdgeInsets.fromLTRB(20, 20, 15, 15),
+    try {
+      return Container(
+        padding: EdgeInsets.all(10),
+        child: Card(
+          child: Container(
+            child: SingleChildScrollView(child: JsonViewerWidget(json)),
+            padding: EdgeInsets.fromLTRB(20, 20, 15, 15),
           ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          elevation: 5,
+          margin: EdgeInsets.all(10),
         ),
-        elevation: 5,
-        margin: EdgeInsets.all(10),
-      ),
-    );
+      );
+    } catch (e) {
+      return Container(child: Center(child: Text('Repita de nuevo, por favor')));
+    }
   }
 
   requestPermission(Permission permission) async => await permission.request();
