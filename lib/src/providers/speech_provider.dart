@@ -1,63 +1,51 @@
 import 'dart:async';
 
-import 'package:appstt/src/models/language_model.dart';
-import 'package:speech_recognition/speech_recognition.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 class SpeechProvider {
-  SpeechRecognition _speechRecognition = SpeechRecognition();
-  bool _isAvailable = false;
-  bool _isListening = false;
+  final _wordController = StreamController<String>.broadcast();
+  final SpeechToText _speech = SpeechToText();
 
-  String _resultText = "";
-  Language _locale = Language.languages.first;
+  bool _hasSpeech;
+  LocaleName language;
+  String _words, _error, _status;
 
-  final _lastWordsController = StreamController<String>.broadcast();
+  Stream<String> get wordStream => _wordController.stream;
+  String get status => _status;
+  String get words => _words;
+  String get error => _error;
 
-  Stream<String> get wordStream => _lastWordsController.stream;
-
-  String get lastWords => _resultText;
-  bool get isAvailable => _isAvailable;
-  bool get isListening => _isListening;
-  Language get language => _locale;
-
-  set lang(Language language) => _locale = language;
-
-  void initSpeechRecognizer() {
-    _speechRecognition
-        .setAvailabilityHandler((bool result) => _isAvailable = result);
-
-    _speechRecognition.setRecognitionStartedHandler(() => _isListening = true);
-
-    _speechRecognition.setRecognitionResultHandler(
-        (String speech) => _lastWordsController.sink.add(_resultText = speech));
-
-    _speechRecognition
-        .setRecognitionCompleteHandler(() => _isListening = false);
-
-    _speechRecognition.activate().then((result) => _isAvailable = result);
+  Future<void> init(bool mounted) async {
+    bool hasSpeech = await _speech.initialize(
+        onError: _errorListener, onStatus: _statusListener);
+    if (hasSpeech) {
+      language = await _speech.systemLocale();
+    }
+    _hasSpeech = mounted ? hasSpeech : _hasSpeech;
   }
 
-  Future<void> speechToText() async {
-    if (_isAvailable && !_isListening)
-      _speechRecognition
-          .listen(locale: _locale.code)
-          .then((result) => print('$result'));
+  speechToText() {
+    _speech
+    .initialize(onStatus: _statusListener, onError: _errorListener)
+    .then((avalaible) {
+      if (avalaible) {
+        _speech.listen(onResult: _resultListener, localeId: language.localeId);
+      }
+    });
+    // some time later...
+    _speech.stop();
   }
 
-  Future<void> stopSpeech() async {
-    if (_isListening)
-      _speechRecognition.stop().then((result) => _isListening = result);
-  }
+  cancelSpeech() => _speech.cancel();
 
-  Future<void> cancelSpeech() async {
-    if (_isListening)
-      _speechRecognition.cancel().then((result) {
-        _isListening = result;
-        _lastWordsController.sink.add(_resultText = "");
-      });
-  }
+  _resultListener(SpeechRecognitionResult result) =>
+      _wordController.sink.add(_words = result.recognizedWords);
 
-  dispose() {
-    _lastWordsController?.close();
-  }
+  _errorListener(SpeechRecognitionError error) => _error = error.errorMsg;
+
+  _statusListener(String status) => _status = status;
+
+  dispose() => _wordController?.close();
 }
