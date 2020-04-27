@@ -36,7 +36,7 @@ class _HomeState extends State<Home> {
           stream: naturalProvider.jsonStream,
           builder: (_, AsyncSnapshot<Map<String, Object>> snapshot) {
             return snapshot.hasData
-                ? buildProgrammCard(snapshot.data)
+                ? displayJson(snapshot.data)
                 : Center(child: Text('Esperando voz...'));
           }),
       floatingActionButton: FloatingActionButton(
@@ -48,7 +48,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget buildProgrammCard(Map<String, Object> json) {
+  Widget displayJson(Map<String, Object> json) {
     return Container(
       padding: EdgeInsets.all(10),
       child: Card(
