@@ -1,5 +1,6 @@
-import 'package:appstt/src/views/home.dart';
 import 'package:flutter/material.dart';
+
+import 'package:appstt/src/views/home.dart';
 
 void main() => runApp(MyApp());
 
@@ -16,3 +17,12 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+/**
+ * StreamBuilder(
+          stream: NaturalLanguageProvider.instance.jsonStream,
+          builder: (_, AsyncSnapshot<Map<String, Object>> snapshot) {
+            return snapshot.hasData
+                ? displayJson(snapshot.data)
+                : Center(child: Text('Esperando voz...'));
+          }),
+ */

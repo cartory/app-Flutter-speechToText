@@ -1,51 +1,60 @@
 import 'dart:async';
 
-import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+
+class SpeechData {
+  bool status;
+  String text, error;
+}
 
 class SpeechProvider {
-  final _wordController = StreamController<String>.broadcast();
-  final SpeechToText _speech = SpeechToText();
+  static SpeechProvider _instance = SpeechProvider();
+  
+  final _data = SpeechData();
+  final _speech = SpeechToText();
+  final _speechController = StreamController<SpeechData>.broadcast();
 
-  bool _hasSpeech;
   LocaleName language;
-  String _words, _error, _status;
 
-  Stream<String> get wordStream => _wordController.stream;
-  String get status => _status;
-  String get words => _words;
-  String get error => _error;
+  static SpeechProvider get instance => _instance;
+  Stream<SpeechData> get dataStream => _speechController.stream;
+  Function(SpeechData) get dataSink => _speechController.sink.add;
 
-  Future<void> init(bool mounted) async {
-    bool hasSpeech = await _speech.initialize(
-        onError: _errorListener, onStatus: _statusListener);
-    if (hasSpeech) {
-      language = await _speech.systemLocale();
-    }
-    _hasSpeech = mounted ? hasSpeech : _hasSpeech;
+  init() {
+    _speech
+    .initialize(onError: _errorListener, onStatus: _statusListener)
+    .then((active) {
+      if (active) _speech.systemLocale().then((locale) => language = locale);
+    });
   }
 
   speechToText() {
     _speech
     .initialize(onStatus: _statusListener, onError: _errorListener)
     .then((avalaible) {
-      if (avalaible) {
+      if (avalaible)
         _speech.listen(onResult: _resultListener, localeId: language.localeId);
-      }
     });
     // some time later...
     _speech.stop();
   }
 
-  cancelSpeech() => _speech.cancel();
+  _resultListener(SpeechRecognitionResult result) {
+    _data.text = result.recognizedWords;
+    dataSink(_data);
+  }
 
-  _resultListener(SpeechRecognitionResult result) =>
-      _wordController.sink.add(_words = result.recognizedWords);
+  _errorListener(SpeechRecognitionError error) {
+    _data.error = error.errorMsg;
+    dataSink(_data);
+  }
 
-  _errorListener(SpeechRecognitionError error) => _error = error.errorMsg;
+  _statusListener(String status) {
+    _data.status = status == "listening";
+    dataSink(_data);
+  }
 
-  _statusListener(String status) => _status = status;
-
-  dispose() => _wordController?.close();
+  dispose() => _speechController?.close();
 }
