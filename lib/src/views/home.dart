@@ -61,9 +61,7 @@ class _HomeState extends State<Home> {
       body: StreamBuilder(
           stream: NaturalLanguageProvider.instance.jsonStream,
           builder: (_, AsyncSnapshot<Map<String, Object>> snapshot) {
-            ErrorWidget.builder = (FlutterErrorDetails errorDetails) {
-              return Container();
-            };
+            ErrorWidget.builder = (errorDetails) => Container();
             return displayJson(snapshot.data ?? json);
           }),
       bottomNavigationBar: BottomAppBar(

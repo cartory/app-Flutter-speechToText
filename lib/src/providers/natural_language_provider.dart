@@ -10,7 +10,7 @@ class NaturalLanguageProvider {
 
   final _scopes = [LanguageApi.CloudLanguageScope];
   final _jsonController = StreamController<Map<String, Object>>.broadcast();
-  
+
   static final _doc = {
     "type": "PLAIN_TEXT",
     "language": "ES",
@@ -40,7 +40,7 @@ class NaturalLanguageProvider {
         .then((res) => _jsonController.sink.add(res.toJson()))
         .catchError((e) => print('AN ERROR HAS OCURRED IN ANALIZETEXT'));
   }
-  
+
   dispose() {
     _client?.close();
     _jsonController?.close();
